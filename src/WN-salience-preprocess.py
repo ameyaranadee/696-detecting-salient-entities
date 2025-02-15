@@ -1,5 +1,6 @@
 import xml.etree.ElementTree as ET
 import json
+import html
 
 xml_data = ""
 all_article_data = []
@@ -30,7 +31,8 @@ for article_page in root:
 		if child.tag == "paragraph":
 			for paragraph_child in child:
 				if paragraph_child.tag == "content":
-					article_data["text"] = article_data["text"] + paragraph_child.text
+					processed_article_text = html.unescape(paragraph_child.text)
+					article_data["text"] = article_data["text"] + processed_article_text
 				#contains information for a salient (or non-salient) entity, gives a wikipedia page link too  
 				if paragraph_child.tag == "annotation":
 					entity_title = None
