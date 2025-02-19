@@ -46,7 +46,7 @@ for elem in train_article_pages:
 
 # Create a tree and write to a file
 tree = ET.ElementTree(root)
-with open("../data/WN-salience-articles-train.xml", "wb") as f:
+with open("../data/WN-Salience-articles-train.xml", "wb") as f:
     tree.write(f, encoding="utf-8")
 
 # Create a root element
@@ -58,6 +58,6 @@ for elem in test_article_pages:
 
 # Create a tree and write to a file
 tree = ET.ElementTree(root)
-with open("../data/WN-salience-articles-test.xml", "wb") as f:
+with open("../data/WN-Salience-articles-test.xml", "wb") as f:
     tree.write(f, encoding="utf-8")
           

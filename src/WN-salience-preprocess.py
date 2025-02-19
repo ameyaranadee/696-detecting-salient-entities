@@ -1,13 +1,17 @@
 import xml.etree.ElementTree as ET
 import json
 import html
+import sys
+
+#either train or test
+train_or_test = sys.argv[1]
 
 xml_data = ""
 #used to store information for all articles, so each entry will be a dictionary with information for current article
 all_article_data = []
 
 # Path to the XML file
-file_path = '../data/WN-Salience-articles-v0.xml'
+file_path = f'../data/WN-Salience-articles-{train_or_test}.xml'
 
 # Read the XML content into a string
 with open(file_path, 'r') as file:
@@ -53,6 +57,6 @@ for article_page in root:
 print(len(all_article_data))
 
 # Write the article data array to a JSON file
-with open('../data/article_info.json', 'w') as json_file:
+with open(f'../data/article_info_{train_or_test}.json', 'w') as json_file:
     json.dump(all_article_data, json_file, indent=4)
           
