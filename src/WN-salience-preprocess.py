@@ -3,6 +3,7 @@ import json
 import html
 
 xml_data = ""
+#used to store information for all articles, so each entry will be a dictionary with information for current article
 all_article_data = []
 
 # Path to the XML file
@@ -17,6 +18,7 @@ xml_data = xml_data.replace('&', '&amp;')
 root = ET.fromstring(xml_data)
 print(root)
 
+#used for debugging purposes in case parser breaks on a certain article
 i = 0
 
 # Access elements
