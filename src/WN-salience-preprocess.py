@@ -12,13 +12,13 @@ all_article_data = []
 
 # Path to the XML file
 file_path = f'../data/WN-Salience-articles-{train_or_test}.xml'
+#file_path = '../data/test-wn.xml'
 
 # Read the XML content into a string
-with open(file_path, 'r') as file:
+with open(file_path, 'r', encoding='utf-8') as file:
     xml_data = file.read()
 
 # Parse from string
-xml_data = xml_data.replace('&', '&amp;')
 root = ET.fromstring(xml_data)
 print(root)
 
@@ -37,8 +37,7 @@ for article_page in root:
 		if child.tag == "paragraph":
 			for paragraph_child in child:
 				if paragraph_child.tag == "content":
-					processed_article_text = html.unescape(paragraph_child.text)
-					article_data["text"] = article_data["text"] + processed_article_text
+					article_data["text"] = article_data["text"] + paragraph_child.text
 				#contains information for a salient (or non-salient) entity, gives a wikipedia page link too  
 				if paragraph_child.tag == "annotation":
 					entity_title = None
@@ -57,6 +56,6 @@ for article_page in root:
 print(len(all_article_data))
 
 # Write the article data array to a JSON file
-with open(f'../data/article_info_{train_or_test}.json', 'w') as json_file:
-    json.dump(all_article_data, json_file, indent=4)
+with open(f'../data/article_info_{train_or_test}.json', 'w', encoding="utf-8") as json_file:
+    json.dump(all_article_data, json_file, indent=4, ensure_ascii=False)
           

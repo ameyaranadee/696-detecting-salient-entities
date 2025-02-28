@@ -1,6 +1,7 @@
 import xml.etree.ElementTree as ET
 import json
 import html
+from lxml import etree
 
 xml_data = ""
 #used to store information for all articles, so each entry will be a dictionary with information for current article
@@ -14,9 +15,9 @@ with open(file_path, 'r') as file:
     xml_data = file.read()
 
 # Parse from string
-xml_data = xml_data.replace('&', '&amp;')
-root = ET.fromstring(xml_data)
+root = ET.fromstring(html.unescape(xml_data).replace('&', '&amp;'))
 print(root)
+
 
 #used for debugging purposes in case parser breaks on a certain article
 i = 0
