@@ -1,3 +1,6 @@
+##THIS FILE IS USED TO OUTPUT train-NYT-Salience.xml and test-NYT-Salience.xml from the tgz
+
+
 import xml.etree.ElementTree as ET
 import json
 import html
@@ -42,9 +45,7 @@ with open(train_nyt_salience_xml_path, "w") as output:
 			with main_tar.extractfile(tgz_file) as nested_file:
 				if nested_file:
 					with tarfile.open(fileobj=nested_file, mode="r:gz") as nested_tar:
-						# print("Contents:")
 						for member in nested_tar.getmembers():
-							# print(f"- {member.name}")
 							#only care about the xml files
 							if member.name.endswith(".xml"):  # Check for XML files
 									print(f"Extracting {member.name}")
@@ -63,9 +64,7 @@ with open(test_nyt_salience_xml_path, "w") as output:
 			with main_tar.extractfile(tgz_file) as nested_file:
 				if nested_file:
 					with tarfile.open(fileobj=nested_file, mode="r:gz") as nested_tar:
-						# print("Contents:")
 						for member in nested_tar.getmembers():
-							# print(f"- {member.name}")
 							#only care about the xml files
 							if member.name.endswith(".xml"):  # Check for XML files
 									print(f"Extracting {member.name}")
