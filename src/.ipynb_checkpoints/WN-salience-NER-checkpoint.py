@@ -1,33 +1,15 @@
 import spacy
 import json
 import requests
-from thefuzz import fuzz
-import csv
-import polars as pl
-import unicodedata
-import torch
-import os
-import copy
-import sys
 
-#Used for writing all of the mentions detected from WN-Salience (train or test) to ../data/WN_Salience_NER.jsonl with left and right context
-def get_wn_salience_ner_mentions_train():
-
-    #either train or test
-    train_or_test = sys.argv[1]
-
-    # Load the RoBERTa NER model from spaCy
-    nlp = spacy.load("en_core_web_trf")
+def main():
+    # Load the English NLP model
+    nlp = spacy.load("en_core_web_sm")
     
-    # Open the pickle file in binary read mode
-    with open('/work/pi_wenlongzhao_umass_edu/8/riya/TrainValDataSplit/WN_salience_TrainSplit.pkl', 'rb') as f
-        data = pickle.load(f)
+    with open("../data/article_info.json", "r") as file:
+        wn_salience_json = json.load(file)
 
-    print(f'number salinet entities in val: {len(data[data["entity salience"] == 1])}')
-
-
-    # Now `data` contains whatever was stored in the pickle file
-    df = data.drop_duplicates(subset="text", keep="first")
+    wn_salience_ner = []
 
     #for debugging 
     i = 0
@@ -46,7 +28,7 @@ def get_wn_salience_ner_mentions_train():
             #NOT SKIPPING ANY OF THESE
             # if ent.label_ in ['MONEY', 'PERCENT', 'QUANTITY', 'TIME', 'ORDINAL', 'CARDINAL', 'DATE']:
             #     continue
-            #print(ent.text, ent.label_)
+            print(ent.text, ent.label_)
             start_idx = ent.start  # Start token index of entity
             end_idx = ent.end      # End token index of entity
 
@@ -59,10 +41,12 @@ def get_wn_salience_ner_mentions_train():
             wn_salience_ner.append({"mention": ent.text, "left_context" : ' '.join([token.text for token in left_context]), "right_context": ' '.join([token.text for token in right_context]), "start_idx": start_idx, "end_idx": end_idx})
 
     print("here")
-    with open("../data/WN_Salience_NER_{train_or_test}.jsonl", "w") as file:
+    with open("../data/WN_Salience_NER.jsonl", "w") as file:
         for entry in wn_salience_ner:
             json.dump(entry, file, ensure_ascii = False)
             file.write('\n')
 
-if __name__ == "__main__":
-    get_wn_salience_ner_mentions_train()
+
+if __name__ == "__main__": 
+    main()
+

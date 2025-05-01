@@ -8,7 +8,7 @@ xml_data = ""
 all_article_data = []
 
 # Path to the XML file
-file_path = '/project/pi_wenlongzhao_umass_edu/8/data/WN-Salience-Old/WN-Salience-articles-v0.xml'
+file_path = '../data/WN-Salience-articles-v0.xml'
 
 # Read the XML content into a string
 with open(file_path, 'r') as file:
@@ -36,8 +36,7 @@ for article_page in root:
             else:
                 test_article_pages.append(article_page)
 
-print(len(train_article_pages))
-print(len(test_article_pages))
+print(type(test_article_pages[0]))
 
 # Create a root element for train article pages XML
 root = ET.Element("root")
