@@ -10,25 +10,31 @@ import os
 import copy
 import sys
 
-#Used for writing all of the mentions detected from WN-Salience (train or test) to ../data/WN_Salience_NER.jsonl with left and right context
-def get_wn_salience_ner_mentions_train():
+#gets NER output on WN-salience test set
+def get_wn_salience_ner_mentions_test():
 
-    #either train or test
-    train_or_test = sys.argv[1]
+    #Use GPU not CPU
+    spacy.prefer_gpu()
 
     # Load the RoBERTa NER model from spaCy
     nlp = spacy.load("en_core_web_trf")
+    doc = nlp("Apple is acquiring a startup in the UK.")
+
+    tensor = doc._.trf_data.tensors[0]  # first tensor = last hidden state
+    print("spaCy transformer running on:", tensor.device)
     
-    # Open the pickle file in binary read mode
-    with open('/work/pi_wenlongzhao_umass_edu/8/riya/TrainValDataSplit/WN_salience_TrainSplit.pkl', 'rb') as f
-        data = pickle.load(f)
+    # Open the json file and load it in 
+    with open('../../data/article_info_test_new.json', 'r') as f:
+        wn_salience_json = json.load(f)
 
-    print(f'number salinet entities in val: {len(data[data["entity salience"] == 1])}')
+    num_salient_entities = 0
+    for document in wn_salience_json:
+        for entity in document["entities"]:
+            if entity["entity salience"] == "1":
+                num_salient_entities += 1
+    print(f'number of salient entities in WN-salience test set: {num_salient_entities}')
 
-
-    # Now `data` contains whatever was stored in the pickle file
-    df = data.drop_duplicates(subset="text", keep="first")
-
+    csv_rows = []
     #for debugging 
     i = 0
     for document in wn_salience_json:
@@ -38,31 +44,33 @@ def get_wn_salience_ner_mentions_train():
         if "text" not in document:
             continue
         text = document["text"]
+        #first two columns of the csv row for the article are the article title and the article text
+        cur_csv_row = [document["title"], document["text"]]
         # Process the text
         doc = nlp(text)
-        context_size = 10
+        #set up list for current document entities
+        cur_doc_named_entities = []
         # Extract named entities
         for ent in doc.ents:
-            #NOT SKIPPING ANY OF THESE
-            # if ent.label_ in ['MONEY', 'PERCENT', 'QUANTITY', 'TIME', 'ORDINAL', 'CARDINAL', 'DATE']:
-            #     continue
-            #print(ent.text, ent.label_)
-            start_idx = ent.start  # Start token index of entity
-            end_idx = ent.end      # End token index of entity
 
-            # Extract left context
-            left_context = doc[max(0, start_idx - context_size) : start_idx]
-            
-            # Extract right context
-            right_context = doc[end_idx : min(len(doc), end_idx + context_size)]
+            start_idx = ent.start_char  # Start character index of entity
+            end_idx = ent.end_char      # End character index of entity
 
-            wn_salience_ner.append({"mention": ent.text, "left_context" : ' '.join([token.text for token in left_context]), "right_context": ' '.join([token.text for token in right_context]), "start_idx": start_idx, "end_idx": end_idx})
+            cur_doc_named_entities.append({"mention": ent.text, "begin_offset": start_idx, "end_offset": end_idx})
 
-    print("here")
-    with open("../data/WN_Salience_NER_{train_or_test}.jsonl", "w") as file:
-        for entry in wn_salience_ner:
-            json.dump(entry, file, ensure_ascii = False)
-            file.write('\n')
+        cur_csv_row.append(json.dumps(cur_doc_named_entities, ensure_ascii=False))
+        csv_rows.append(cur_csv_row)
+
+    file_path = '../../data/WN-salience-test-NER-output.csv'
+
+    # Open the file in write mode and create a CSV writer object
+    with open(file_path, mode='w', newline='') as file:
+        writer = csv.writer(file)
+        column_names = ["title", "text", "entities"]
+        writer.writerow(column_names)
+        # Write all rows from the list of lists into the CSV file
+        writer.writerows(csv_rows)
+
 
 if __name__ == "__main__":
-    get_wn_salience_ner_mentions_train()
+    get_wn_salience_ner_mentions_test()
