@@ -1,8 +1,14 @@
 **/.ipynb_checkpoints
 **/__pycache__
-/models
 /.DS_Store
+
+submit_job.sh
+slurm-*.out
+
+*.csv
+
+/metrics
+/models
 /outputs
 /prompts
-/metrics
 /prep_kb

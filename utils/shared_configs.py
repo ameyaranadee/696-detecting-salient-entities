@@ -33,8 +33,7 @@ def get_llm(model_path=LLAMA_MODEL_PATH, tokenizer_path=None, download_dir=DOWNL
     return LLM(
         model=model_path,
         tokenizer=tokenizer_path,
-        download_dir=download_dir,
-        tensor_parallel_size=1
+        download_dir=download_dir
     )
 
 def initialize_llm(model_path, tokenizer_path=None):
