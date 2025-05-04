@@ -31,24 +31,29 @@ def read_csv(csv_path):
     df = pd.read_csv(csv_path)
     return df
 
+def write_csv(df, output_path):
+    df.to_csv(output_path, index=False)
+    return
+
 def get_wiki_id(url):
-    if not url:
+    if not isinstance(url, str):
         return None
-    
-    title_match = re.search(r"wiki/(.+)$", url)
+
+    # Match /wiki/Title or wiki/Title or full URL
+    title_match = re.search(r"(?:/)?wiki/([^#?]+)", url)
     if not title_match:
         return None
-    
+
     title = title_match.group(1)
     api_url = f"https://en.wikipedia.org/w/api.php?action=query&titles={title}&format=json"
-    
+
     try:
         response = requests.get(api_url)
+        response.raise_for_status()
         response_data = response.json()
         pages = response_data.get("query", {}).get("pages", {})
-        
         if pages:
-            return next(iter(pages))  # Extract the first (and only) page ID
+            return next(iter(pages))  # This is the page ID
     except Exception as e:
         print(f"Error fetching Wiki ID for {url}: {e}")
     
