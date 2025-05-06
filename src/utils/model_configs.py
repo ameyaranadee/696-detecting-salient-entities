@@ -7,7 +7,7 @@ DOWNLOAD_DIR = os.path.join(os.path.abspath(os.path.join(os.getcwd(), '..')), "m
 LLAMA_MODEL_PATH = "/datasets/ai/llama3/hub/models--meta-llama--Meta-Llama-3.1-8B-Instruct/snapshots/5206a32e0bd3067aef1ce90f5528ade7d866253f"
 ZEHPYR_MODEL_PATH = "HuggingFaceH4/zephyr-7b-beta"
 
-def get_sampling_params(max_tokens=300, temperature=0, top_p=0.9, stops=None):
+def get_sampling_params(max_tokens=300, temperature=0, stops=None):
     if stops is None:
         stops = ["</s>", "\n}"]
     return SamplingParams(

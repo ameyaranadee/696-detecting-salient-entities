@@ -1,4 +1,4 @@
-# run_pointwise_entity_linking.py
+# pointwise_entity_linking.py
 import os
 import re
 import json
@@ -23,8 +23,8 @@ def main(args):
     llm = initialize_llm(model_path=LLAMA_MODEL_PATH, tokenizer_path=LLAMA_MODEL_PATH)
     sampling_params = get_sampling_params(max_tokens=200, temperature=0.6, top_p=0.9, stops=["</s>", "\n}"])
 
-    # Load and prepare dataset
-    input_df = pd.read_csv(args.input_csv) 
+    # Load and prepare dataset -> shift to preproessing / loading util
+    input_df = pd.read_csv(args.input_csv, dtype={'gt_wiki_id': 'Int64'})
     column_mapping = {
         'text': 'article_text',
         'title': 'article_title',
@@ -36,8 +36,7 @@ def main(args):
     input_df = input_df.dropna(subset=['entity_title'])
 
     # Add contextual information
-    input_df['surrounding_context'] = input_df.apply(
-        lambda row: extract_surrounding_context(row['article_text'], eval(row['offsets']), row['entity_title'], n=2), axis=1)
+    input_df['surrounding_context'] = input_df.apply(lambda row: extract_surrounding_context(row['article_text'], eval(row['offsets']), row['entity_title'], n=2), axis=1)
 
     # Load alias KB
     alias_kb = load_alias_kb(args.kb_path)
@@ -45,7 +44,7 @@ def main(args):
     # Candidate retrieval
     input_df['candidates'] = input_df['entity_title'].apply(lambda title: retrieve_candidates(title, alias_kb))
     input_df['pre_filter_candidate_count'] = input_df['candidates'].apply(lambda x: len(x) if isinstance(x, list) else 0)
-    input_df.to_csv(os.path.join(args.output_dir, 'intermediate_pre_filter.csv'), index=False)
+    input_df.to_csv(os.path.join(args.output_dir, 'pre_pointwise_candidates.csv'), index=False)
 
     # Construct prompts
     prompt_records = []
@@ -82,17 +81,17 @@ def main(args):
             cand_list[row['cand_idx']]['llm_decision'] = row['llm_text']
             cand_list[row['cand_idx']]['relevant'] = row['keep']
 
-    input_df.to_csv(os.path.join(args.output_dir, 'intermediate_post_llm.csv'), index=False)
+    input_df.to_csv(os.path.join(args.output_dir, 'pointwise_filtered_candidates.csv'), index=False)
 
     # Apply filtering
     input_df['filtered_candidates'] = input_df['filtered_candidates'].apply(
         lambda cl: [c for c in cl if c.get("relevant") is True] if isinstance(cl, list) else cl)
     input_df['post_filter_candidate_count'] = input_df['filtered_candidates'].apply(
         lambda x: len(x) if isinstance(x, list) else 0)
-    input_df.to_csv(os.path.join(args.output_dir, 'final_filtered_candidates.csv'), index=False)
+    input_df.to_csv(os.path.join(args.output_dir, 'pointwise_results.csv'), index=False)
 
     # Evaluation
-    metrics = compute_metrics_from_pointwise_csv(os.path.join(args.output_dir, 'final_filtered_candidates.csv'))
+    metrics = compute_metrics_from_pointwise_csv(os.path.join(args.output_dir, 'pointwise_results.csv'))
     print("\nEvaluation:")
     for k, v in metrics.items():
         print(f"{k}: {v:.4f}")
@@ -101,8 +100,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Pointwise Entity Linking Pipeline")
     parser.add_argument("--input_csv", type=str, required=True, help="Path to input CSV with mentions and articles")
     parser.add_argument("--kb_path", type=str, required=True, help="Path to alias KB JSON file")
-    parser.add_argument("--output_dir", type=str, default="results/pointwise", help="Directory to store intermediate and final results")
-    parser.add_argument("--batch_size", type=int, default=7500, help="Batch size for LLM inference")
+    parser.add_argument("--output_dir", type=str, default="results/EL", help="Directory to store intermediate and final results")
+    parser.add_argument("--batch_size", type=int, default=5000, help="Batch size for LLM inference")
     args = parser.parse_args()
     os.makedirs(args.output_dir, exist_ok=True)
     main(args)
