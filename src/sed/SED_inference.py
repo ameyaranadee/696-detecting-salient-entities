@@ -12,6 +12,7 @@ from sklearn.metrics import precision_score, recall_score, f1_score
 from utils.load_dataset import read_csv, write_csv
 from eval.SED_eval import fuzzy_match, evaluate_salience, evaluate_multiple_instances
 from utils.model_configs import LLAMA_MODEL_PATH, get_sampling_params, initialize_llm
+from utils.llm_utils import clean_incomplete_json
 
 def generate_llm_op(articles,titles,prompt):
     combined_prompts = []
@@ -38,14 +39,12 @@ def main(args):
     # Load prompt
     with open(args.prompt_path, 'r', encoding='utf-8') as f:
         prompt = f.read()
-    # llm = init_model(args.model_path)
+    
+    # Load model
     llm = initialize_llm(model_path=LLAMA_MODEL_PATH, tokenizer_path=LLAMA_MODEL_PATH)
-    # sampling_params = SamplingParams(n=1, temperature=0, max_tokens=300, stop=["</s>", "\n}"])
     sampling_params = get_sampling_params(max_tokens=300, temperature=0, stops=["</s>", "\n}"])
-    articles = df['text']
-    titles = df['title']
-    outputs = generate_llm_op(articles,titles,prompt)
-    df = format_results(df,output)
+    outputs = generate_llm_op(df['text'], df['title'], prompt)
+    df = format_results(df, outputs)
     write_csv(args.output_path, index = False)
     print(f"Saved output to: {args.output_path}")
 
