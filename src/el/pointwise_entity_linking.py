@@ -25,10 +25,11 @@ def main(args):
 
     # Load and prepare dataset -> shift to preproessing / loading util
     input_df = pd.read_csv(args.input_csv, dtype={'wiki_ID': 'Int64'})
+    title,text,mention,type,type_desc,begin_offset,end_offset
     column_mapping = {
         'text': 'article_text',
         'title': 'article_title',
-        'entity title': 'entity_title',
+        'mention': 'entity_title',
         'entity salience': 'entity_salience'
     }
 

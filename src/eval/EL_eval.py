@@ -28,6 +28,8 @@ def compute_metrics_from_pointwise_csv(csv_path):
         original_count = row['pre_pt_len_candidates']
         retained_count = row['post_pt_len_candidates']
 
+        # So during evaluation, for each article, we will loop over each linked named entity and compare that with ground truth salient entities
+
         survived = any(int(c.get('wiki_id')) == int(row['wiki_ID']) and c.get('relevant') for c in candidates)
         recall_hits += int(survived)
         reduction_ratios.append(retained_count / original_count if original_count else 1.0)
