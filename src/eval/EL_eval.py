@@ -13,7 +13,7 @@ def safe_parse_candidates(x):
         return ast.literal_eval(x)
 
 def compute_metrics_from_pointwise_csv(csv_path):
-    df = pd.read_csv(csv_path, dtype={'gt_wiki_id': 'Int64'})
+    df = pd.read_csv(csv_path, dtype={'wiki_ID': 'Int64'})
     df['candidates_after_pointwise'] = df['candidates_after_pointwise'].apply(safe_parse_candidates)
 
     total_mentions, recall_hits = 0, 0
@@ -28,7 +28,7 @@ def compute_metrics_from_pointwise_csv(csv_path):
         original_count = row['pre_pt_len_candidates']
         retained_count = row['post_pt_len_candidates']
 
-        survived = any(int(c.get('wiki_id')) == int(row['gt_wiki_id']) and c.get('relevant') for c in candidates)
+        survived = any(int(c.get('wiki_id')) == int(row['wiki_ID']) and c.get('relevant') for c in candidates)
         recall_hits += int(survived)
         reduction_ratios.append(retained_count / original_count if original_count else 1.0)
         retained_counts.append(retained_count)
@@ -42,8 +42,8 @@ def compute_metrics_from_pointwise_csv(csv_path):
 def evaluate_contextual_linking(df):
     total_mentions = len(df)
     linked_mentions = (df['top_linked_entity'] != 0).sum()
-    ground_truth_mentions = df['gt_wiki_id'].notna().sum()
-    correct_links = sum((df['top_linked_entity'] == df['gt_wiki_id']) & df['gt_wiki_id'].notna())
+    ground_truth_mentions = df['wiki_ID'].notna().sum()
+    correct_links = sum((df['top_linked_entity'] == df['wiki_ID']) & df['wiki_ID'].notna())
 
     accuracy = correct_links / total_mentions if total_mentions else 0
     precision = correct_links / linked_mentions if linked_mentions else 0

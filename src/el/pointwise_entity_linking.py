@@ -24,7 +24,7 @@ def main(args):
     sampling_params = get_sampling_params(max_tokens=200, temperature=0.6, top_p=0.9, stops=["</s>", "\n}"])
 
     # Load and prepare dataset -> shift to preproessing / loading util
-    input_df = pd.read_csv(args.input_csv, dtype={'gt_wiki_id': 'Int64'})
+    input_df = pd.read_csv(args.input_csv, dtype={'wiki_ID': 'Int64'})
     column_mapping = {
         'text': 'article_text',
         'title': 'article_title',
@@ -33,7 +33,7 @@ def main(args):
     }
 
     input_df.rename(columns=column_mapping, inplace=True)
-    input_df = input_df.dropna(subset=['entity_title'])
+    # input_df = input_df.dropna(subset=['entity_title'])
 
     # Add contextual information
     input_df['surrounding_context'] = input_df.apply(lambda row: extract_surrounding_context(row['article_text'], eval(row['offsets']), row['entity_title'], n=2), axis=1)
