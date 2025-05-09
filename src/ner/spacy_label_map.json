@@ -1,0 +1,20 @@
+{
+    "PERSON": "People, including fictional characters",
+    "NORP": "Nationalities, religious or political groups",
+    "FAC": "Buildings, airports, highways, bridges, etc.",
+    "ORG": "Organizations (companies, agencies, institutions, etc.)",
+    "GPE": "Countries, cities, states (Geopolitical Entities)",
+    "LOC": "Non-GPE locations (mountains, bodies of water, etc.)",
+    "PRODUCT": "Objects, vehicles, foods, etc. (not services)",
+    "EVENT": "Named events (e.g., Battle of Hastings, Oscars)",
+    "WORK_OF_ART": "Titles of books, songs, paintings, etc.",
+    "LAW": "Named documents made into laws (e.g., Constitution)",
+    "LANGUAGE": "Any named language (e.g., English, Spanish)",
+    "DATE": "Absolute or relative dates (e.g., July 4th, two weeks ago)",
+    "TIME": "Specific times (e.g., 2 p.m., midnight)",
+    "PERCENT": "Percentage (e.g., 50%)",
+    "MONEY": "Monetary values (e.g., $1M, 200 euros)",
+    "QUANTITY": "Measurements (e.g., 5kg, 10 miles)",
+    "ORDINAL": "Ranked items (e.g., first, second)",
+    "CARDINAL": "Numerals (e.g., 1, 100, one million)"
+}
