@@ -162,7 +162,7 @@ def write_files():
     alias_table = pl.read_csv("/work/pi_wenlongzhao_umass_edu/8/OneNet/OneNet-main/NER4L/merged_alias.csv")
 
     #load article data  
-    with open("../data/article_info.json", "r") as file:
+    with open("/work/pi_wenlongzhao_umass_edu/8/james/696-detecting-salient-entities/data/article_info.json", "r") as file:
         wn_salience_json = json.load(file)
 
     all_docs_mentions = []
@@ -188,29 +188,27 @@ def write_files():
         cur_doc_mentions = {}
         #loop through to update number of salient mentions across WN-Salience
         for entity in document["entities"]:
-            #don't want to double count entities, so if "New York" is labeled as an entity twice in ground truth, skip it
-            if entity["entity title"] not in cur_doc_mentions:
-                #I shouldn't need this but I do
-                if entity["entity title"] is None:
-                    continue
-                entity_title = remove_accents(entity["entity title"])
-                #getting the aliases for the current salient mention from the alias table
-                cur_entity_aliases = alias_table.filter(pl.col("mentions") == entity_title.lower())["title"].to_list()
-                #if current salient mention is not found in alias table, only alias will be itself
-                if len(cur_entity_aliases) == 0:
-                    print(f'no entry in alias table: {entity["entity title"]}')
-                    cur_doc_mentions[entity["entity title"]] = [entity["entity title"]]
-                else:
-                    #also append original to list of possible aliases
-                    cur_doc_mentions[entity["entity title"]] = cur_entity_aliases
-                    cur_doc_mentions[entity["entity title"]].append(entity["entity title"])
+            #I shouldn't need this but I do
+            if entity["entity title"] is None:
+                continue
+            entity_title = remove_accents(entity["entity title"])
+            #getting the aliases for the current ground truth entity from the alias table
+            cur_entity_aliases = alias_table.filter(pl.col("mentions") == entity_title.lower())["title"].to_list()
+            #if current salient mention is not found in alias table, only alias will be itself
+            if len(cur_entity_aliases) == 0:
+                print(f'no entry in alias table: {entity["entity title"]}')
+                cur_doc_mentions[entity["entity title"]] = [entity["entity title"]]
+            else:
+                #also append original to list of possible aliases
+                cur_doc_mentions[entity["entity title"]] = cur_entity_aliases
+                cur_doc_mentions[entity["entity title"]].append(entity["entity title"])
         all_docs_mentions.append(cur_doc_mentions)
 
     #writing salient mentions and aliases from alias tables
-    with open("../data/WN_Salience_all_aliases.json", "w") as file:
+    with open("/work/pi_wenlongzhao_umass_edu/8/james/696-detecting-salient-entities/data/WN_Salience_all_aliases.json", "w") as file:
         json.dump(all_docs_mentions, file, indent=4, ensure_ascii=False)
     
-    with open(f"../data/WN_Salience_{model.upper()}_all_NER.json", "w") as file:
+    with open(f"/work/pi_wenlongzhao_umass_edu/8/james/696-detecting-salient-entities/data/WN_Salience_{model.upper()}_all_NER.json", "w") as file:
         json.dump(spacy_ner_outputs, file, indent=4, ensure_ascii=False)
     
 
@@ -222,10 +220,10 @@ if __name__ == "__main__":
     alias = "alias"
     
     if not(os.path.exists("../data/WN_Salience_all_aliases.json") and os.path.exists(f"../data/WN_Salience_{model.upper()}_all_NER.json")):
-        print("salient mention aliases and spacy NER output files don't both exist, creating them now")
+        print("entity aliases and spacy NER output files don't both exist, creating them now")
         write_files()
     else:
-        print("salient mention aliases and spacy NER output files both exist")
+        print("entity aliases and spacy NER output files both exist")
 
     # with open("../data/WN_Salience_salient_aliases.json", "r") as file:
     #     all_docs_salient_mentions_original = json.load(file)

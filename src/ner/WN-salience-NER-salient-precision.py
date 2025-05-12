@@ -11,18 +11,19 @@ import copy
 
 
 #this is the same as precision_recall_alias_table but this time we're not using any of the aliases from alias table for the salient mention
-def precision_recall_no_alias_table(fuzz_ratio, document_salient_mentions_aliases, document_spacy_mentions):
+def precision_no_alias_table(fuzz_ratio, document_salient_mentions_aliases, document_spacy_mentions):
     #detected salient mentions
     json_spacy_salient_mentions = []
 
     #load article data  
-    with open("../data/article_info.json", "r") as file:
+    with open("../../data/article_info.json", "r") as file:
         wn_salience_json = json.load(file)
 
     #numerator in both precision and recall
     spacy_detected_salient_mentions = 0
+
     #denominator for precision
-    total_mentions = 0
+    total_mentions = total_ner_outputs
     #denominator for recall
     actual_num_salient_mentions = total_salient_mentions
     #dictionary used to track categories of salient mentions (as detected by spaCy)
@@ -37,14 +38,11 @@ def precision_recall_no_alias_table(fuzz_ratio, document_salient_mentions_aliase
         doc_ents = document_spacy_mentions[doc_index]
         #loop through entities detected by spacy
         for ent in doc_ents:
-            #new mention detected so add to total number of mentions
-            total_mentions += 1
             #used to avoid double counting
             salient_mention_to_remove = None
             
             #entity_title is current salient mention (key in cur_doc_salient_mentions)
             for entity_title in cur_doc_salient_mentions:
-                #loop through all aliases for current ground truth salient mention
                 if fuzz.ratio(entity_title, ent[0]) > fuzz_ratio:
                     spacy_detected_salient_mentions += 1
                     #json_spacy_salient_mentions.append({"spacy ent.text": ent[0], "salient mention WN-Salience": entity_title})
@@ -66,26 +64,32 @@ def precision_recall_no_alias_table(fuzz_ratio, document_salient_mentions_aliase
 
     print(f'spacy detected salient mentions: {spacy_detected_salient_mentions}')
     print(f'ground truth number salient mentions: {actual_num_salient_mentions}')
+    print(f'number of NER outputs: {total_mentions}')
     recall = float(spacy_detected_salient_mentions/actual_num_salient_mentions)
     print(f'recall: {recall}')
+    precision = float(spacy_detected_salient_mentions/total_mentions)
+    print(f'precision: {precision}')
     print(f'fuzz ratio: {fuzz_ratio}')
     print(spacy_salient_mention_categories)
-    return recall
+    f1 = float((2*recall*precision)/(precision+recall))
+    print(f'f1 score: {f1}')
+    return precision
 
 #now for each salient entity, comparing each spaCy mention to both salient entity (ground truth) and its aliases from alias table to determine 
 #whether spaCy detects the saleint mention or not 
-def precision_recall_alias_table(fuzz_ratio, document_salient_mentions_aliases, document_spacy_mentions):
+def precision_alias_table(fuzz_ratio, document_salient_mentions_aliases, document_spacy_mentions):
     #detected salient mentions
     json_spacy_salient_mentions = []
 
     #load article data  
-    with open("../data/article_info.json", "r") as file:
+    with open("../../data/article_info.json", "r") as file:
         wn_salience_json = json.load(file)
 
     #numerator in both precision and recall
     spacy_detected_salient_mentions = 0
+
     #denominator for precision
-    total_mentions = 0
+    total_mentions = total_ner_outputs
     #denominator for recall
     actual_num_salient_mentions = total_salient_mentions
     #dictionary used to track categories of salient mentions (as detected by spaCy)
@@ -99,8 +103,6 @@ def precision_recall_alias_table(fuzz_ratio, document_salient_mentions_aliases, 
         # Process the text
         doc_ents = document_spacy_mentions[doc_index]
         for ent in doc_ents:
-            #new mention detected so add to total number of mentions
-            total_mentions += 1
             #used to avoid double counting
             salient_mention_to_remove = None
             
@@ -108,7 +110,7 @@ def precision_recall_alias_table(fuzz_ratio, document_salient_mentions_aliases, 
             for entity_title in cur_doc_salient_mentions:
                 #loop through all aliases for current ground truth salient mention
                 for alias in cur_doc_salient_mentions[entity_title]:
-                    #detecting salient mention, using fuzz ratio of 0.8
+                    #detecting salient mention, using fuzz ratio of fuzz_ratio
                     if fuzz.ratio(alias, ent[0]) > fuzz_ratio:
                         spacy_detected_salient_mentions += 1
                         #json_spacy_salient_mentions.append({"spacy ent.text": ent[0], "salient mention WN-Salience": entity_title})
@@ -119,7 +121,7 @@ def precision_recall_alias_table(fuzz_ratio, document_salient_mentions_aliases, 
                             spacy_salient_mention_categories[ent[1]] = 1
                         else:
                             spacy_salient_mention_categories[ent[1]] += 1
-                        #because we don't need to loop through any of the other aliases of the current salient mention
+                        #because we don't need to loop through any of the other aliases of the current salient mention (entity_title)
                         break
                 #remove salient mention and its aliases from cur_doc_salient_mentions because we've just detected it
                 #and break because we are assuming current named entity output by spacy is only referencing one salient entity
@@ -134,9 +136,15 @@ def precision_recall_alias_table(fuzz_ratio, document_salient_mentions_aliases, 
     print(f'ground truth number salient mentions: {actual_num_salient_mentions}')
     recall = float(spacy_detected_salient_mentions/actual_num_salient_mentions)
     print(f'recall: {recall}')
+    precision = float(spacy_detected_salient_mentions/total_mentions)
+    # print(f'precision numerator: {spacy_detected_salient_mentions}')
+    # print(f'precision denominator: {total_mentions}')
+    print(f'precision: {precision}')
     print(f'fuzz ratio: {fuzz_ratio}')
     print(spacy_salient_mention_categories)
-    return recall
+    f1 = float((2*recall*precision)/(precision+recall))
+    print(f'f1 score: {f1}')
+    return precision
 
 #To turn Roberto Córdova into Roberto Cordova for example
 def remove_accents(text):
@@ -162,7 +170,7 @@ def write_files():
     alias_table = pl.read_csv("/work/pi_wenlongzhao_umass_edu/8/OneNet/OneNet-main/NER4L/merged_alias.csv")
 
     #load article data  
-    with open("../data/article_info.json", "r") as file:
+    with open("../../data/article_info.json", "r") as file:
         wn_salience_json = json.load(file)
 
     all_docs_salient_mentions = []
@@ -217,39 +225,44 @@ def write_files():
 if __name__ == "__main__": 
 
     #change these to command line arguments?
-    model = "trf"
-    alias = "alias"
+    model = "sm"
+    alias = "no_alias"
     
-    if not(os.path.exists("../data/WN_Salience_salient_aliases.json") and os.path.exists(f"../data/WN_Salience_{model.upper()}_NER.json")):
+    if not(os.path.exists("../../data/WN_Salience_salient_aliases.json") and os.path.exists(f"../../data/WN_Salience_{model.upper()}_NER.json")):
         print("salient mention aliases and spacy NER output files don't both exist, creating them now")
         write_files()
     else:
         print("salient mention aliases and spacy NER output files both exist")
 
-    with open("../data/WN_Salience_salient_aliases.json", "r") as file:
+    with open("../../data/WN_Salience_salient_aliases.json", "r") as file:
         all_docs_salient_mentions_original = json.load(file)
     
-    with open(f"../data/WN_Salience_{model.upper()}_NER.json") as file:
+    with open(f"../../data/WN_Salience_{model.upper()}_NER.json") as file:
         spacy_ner_outputs = json.load(file)
-
-    with open('../data/article_info.json', 'r') as file:
-        articles = json.load(file)
+        print(len(spacy_ner_outputs))
 
     total_salient_mentions = 0
     #get number of salient mentions based on all_docs_salient_mentions
     for doc_salient_aliases in all_docs_salient_mentions_original:
         total_salient_mentions += len(doc_salient_aliases)
-    #print(len(all_docs_salient_mentions))
-    print(f'total number salient mentions: {total_salient_mentions}')
+
+    #numerator for precision
+    total_ner_outputs = 0
+    for doc_ner_output in spacy_ner_outputs:
+        total_ner_outputs += len(doc_ner_output)
+
+    print(f'total number salient mentions (recall denominator): {total_salient_mentions}')
+    print(f'total number named entities output from NER (precision denominator): {total_ner_outputs}')
+
     fuzz_ratios = [65 + i*5 for i in range(7)]
-    fuzz_ratio_recall_dict = {}
+    fuzz_ratio_precision_dict = {}
     for fr in fuzz_ratios:
         all_docs_salient_mentions = copy.deepcopy(all_docs_salient_mentions_original)
         if alias == "no_alias":
-            recall_output = precision_recall_no_alias_table(fr, all_docs_salient_mentions, spacy_ner_outputs)
+            f1_output = precision_no_alias_table(fr, all_docs_salient_mentions, spacy_ner_outputs)
         if alias == "alias":
-            recall_output = precision_recall_alias_table(fr, all_docs_salient_mentions, spacy_ner_outputs)
-        fuzz_ratio_recall_dict[fr] = recall_output
+            f1_output = precision_alias_table(fr, all_docs_salient_mentions, spacy_ner_outputs)
+        fuzz_ratio_precision_dict[fr] = f1_output
     
-    with open(f'../results/recall/spacy_{alias}_{model}_recall.json', 'w') as file:
-        json.dump(fuzz_ratio_recall_dict, file, indent=4)
+    with open(f'../../results/precision/spacy_{alias}_{model}_f1.json', 'w') as file:
+        json.dump(fuzz_ratio_precision_dict, file, indent=4)
