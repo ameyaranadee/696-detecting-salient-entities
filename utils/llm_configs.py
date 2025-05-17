@@ -38,3 +38,28 @@ def get_llm(model_path=LLAMA_MODEL_PATH, tokenizer_path=None, download_dir=DOWNL
 
 def initialize_llm(model_path, tokenizer_path=None):
     return get_llm(model_path=model_path, tokenizer_path=tokenizer_path)
+
+def setup_llm(model: str):
+    if model == "llama":
+        model_path = LLAMA_MODEL_PATH
+    elif model == "zephyr":
+        model_path = ZEHPYR_MODEL_PATH
+    else:
+        raise ValueError(f"Unsupported model: {model}")
+
+    llm = initialize_llm(model_path=model_path, tokenizer_path=model_path)
+    sampling_params = get_sampling_params(
+        max_tokens=200,
+        temperature=0.6,
+        top_p=0.9,
+        stops=["</s>", "\n}"]
+    )
+    return llm, sampling_params
+
+def load_column_mapping():
+    return {
+        'text': 'article_text',
+        'title': 'article_title',
+        'entity title': 'entity_title',
+        'entity salience': 'entity_salience'
+    }

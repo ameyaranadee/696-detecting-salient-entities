@@ -12,3 +12,7 @@ slurm-*.out
 /outputs
 /prompts
 /prep_kb
+
+*.ttl
+
+*.log
