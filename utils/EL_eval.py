@@ -38,10 +38,54 @@ def compute_metrics_from_pointwise_csv(csv_path: str):
 
     recall_at_filter = recall_hits / total_mentions if total_mentions > 0 else 0.0
     reduction_ratio = np.mean(reduction_ratios) if reduction_ratios else 1.0
+    filtering_rate = 1.0 - reduction_ratio
     avg_retained_candidates = np.mean(retained_counts) if retained_counts else 0.0
 
     return {
-        "Recall@filter": recall_at_filter,
-        "Reduction ratio": float(reduction_ratio),
+        "Pointwise recall": recall_at_filter,
+        "Filtering rate": float(filtering_rate),
         "Average retained candidates": float(avg_retained_candidates)
+    }
+
+def evaluate_contextual_linking(df):
+    """
+    Evaluate performance of contextual entity linker.
+    Assumes 'top_linked_entity' and 'wiki_ID' are both integers, with 0 meaning "no prediction made".
+    """
+
+    total_mentions = len(df)
+    linked_mentions = (df['top_linked_entity'] != 0).sum()
+    ground_truth_mentions = df['wiki_ID'].notna().sum()
+
+    correct_links = 0
+
+    for _, row in df.iterrows():
+        pred = row['top_linked_entity']
+        gt = row['wiki_ID']
+
+        if pred == 0 or pd.isna(gt):
+            continue
+
+        if int(pred) == int(gt):
+            correct_links += 1
+
+    accuracy = correct_links / total_mentions if total_mentions else 0
+    precision_at_linked = correct_links / linked_mentions if linked_mentions else 0
+    recall = correct_links / ground_truth_mentions if ground_truth_mentions else 0
+    
+    if precision_at_linked + recall > 0:
+        f1_score = 2 * (precision_at_linked * recall) / (precision_at_linked + recall)
+    else:
+        f1_score = 0.0
+
+    print(f"Entities evaluated: {total_mentions}")
+    print(f"Ground truth (non-null): {ground_truth_mentions}")
+    print(f"Predictions made: {linked_mentions}")
+    print(f"Correct links: {correct_links}\n")
+
+    return {
+        "Accuracy": accuracy,
+        "Precision": float(precision_at_linked),
+        "Recall": float(recall),
+        "F1 Score": float(f1_score)
     }
